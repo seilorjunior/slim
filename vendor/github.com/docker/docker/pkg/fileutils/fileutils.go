@@ -34,18 +34,16 @@ func CopyFile(src, dst string) (int64, error) {
 
 // ReadSymlinkedDirectory returns the target directory of a symlink.
 // The target of the symbolic link may not be a file.
-func ReadSymlinkedDirectory(path string) (string, error) {
-	var realPath string
-	var err error
+func ReadSymlinkedDirectory(path string) (realPath string, err error) {
 	if realPath, err = filepath.Abs(path); err != nil {
-		return "", fmt.Errorf("unable to get absolute path for %s: %s", path, err)
+		return "", fmt.Errorf("unable to get absolute path for %s: %w", path, err)
 	}
 	if realPath, err = filepath.EvalSymlinks(realPath); err != nil {
-		return "", fmt.Errorf("failed to canonicalise path for %s: %s", path, err)
+		return "", fmt.Errorf("failed to canonicalise path for %s: %w", path, err)
 	}
 	realPathInfo, err := os.Stat(realPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to stat target '%s' of '%s': %s", realPath, path, err)
+		return "", fmt.Errorf("failed to stat target '%s' of '%s': %w", realPath, path, err)
 	}
 	if !realPathInfo.Mode().IsDir() {
 		return "", fmt.Errorf("canonical path points to a file '%s'", realPath)
@@ -58,12 +56,12 @@ func CreateIfNotExists(path string, isDir bool) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			if isDir {
-				return os.MkdirAll(path, 0755)
+				return os.MkdirAll(path, 0o755)
 			}
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 				return err
 			}
-			f, err := os.OpenFile(path, os.O_CREATE, 0755)
+			f, err := os.OpenFile(path, os.O_CREATE, 0o755)
 			if err != nil {
 				return err
 			}
